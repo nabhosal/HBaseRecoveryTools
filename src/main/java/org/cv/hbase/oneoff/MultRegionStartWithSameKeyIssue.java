@@ -25,7 +25,7 @@ public class MultRegionStartWithSameKeyIssue {
 
         Configuration conf = HBaseConfiguration.create();
         conf.set("hbase.zookeeper.property.clientPort", "2181");
-        conf.set("hbase.zookeeper.quorum", "13.233.118.88");
+        conf.set("hbase.zookeeper.quorum", "<ip>");
         conf.set("zookeeper.znode.parent", "/hbase");
         Connection client = ConnectionFactory.createConnection(conf);
         System.out.println("------- Connection established ------> ");
