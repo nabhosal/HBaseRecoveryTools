@@ -1,0 +1,9 @@
+.idea/
+/.settings/
+/target/
+/project/target/
+.gradle/
+
+*.class
+.classpath
+.project
