@@ -1,5 +1,7 @@
 package org.cv.hbase.oneoff;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HRegionInfo;
@@ -21,34 +23,76 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MultRegionStartWithSameKeyIssue {
 
 
+    public static class CMDArgs {
+
+        @Parameter(names = {"-zkHosts", "-hosts"}, description = "Comma-separated list of hostname for zookeeper quorum")
+        public String zkQuorum = "127.0.0.1";
+
+        @Parameter(names = {"-zkPort", "-port"}, description = "Zookeeper port, default is 2181")
+        public String zkPort = "2181";
+
+        @Parameter(names = {"-zkPath", "-path"}, description = "Hbase parent path")
+        public String zkParentPath = "/hbase";
+
+        @Parameter(names = {"-hbaseTableName", "-tb"}, description = "HBase table name")
+        public String tableName;
+
+        @Parameter(names = {"-maxRetries", "-mr"}, description = "Set max retires, default is 3")
+        public int maxRetries = 3;
+
+        @Parameter(names = {"--mergeRegion", "-merge"}, description = "Merge regions starts with same key")
+        public boolean merge = false;
+
+        @Parameter(names = {"--retryAfterTimeInSecond", "-rfts"}, description = "Merge regions starts with same key")
+        public int retryAfterTimeInSecond = 10;
+
+        @Override
+        public String toString() {
+            return "CMDArgs{" +
+                    "zkQuorum='" + zkQuorum + '\'' +
+                    ", zkPort='" + zkPort + '\'' +
+                    ", zkParentPath='" + zkParentPath + '\'' +
+                    ", tableName='" + tableName + '\'' +
+                    ", maxRetries=" + maxRetries +
+                    ", merge=" + merge +
+                    ", retryAfterTimeInSecond=" + retryAfterTimeInSecond +
+                    '}';
+        }
+
+        public static CMDArgs parseArgs(String ...argv){
+
+            MultRegionStartWithSameKeyIssue.CMDArgs args = new MultRegionStartWithSameKeyIssue.CMDArgs();
+            JCommander.newBuilder()
+                    .addObject(args)
+                    .build()
+                    .parse(argv);
+
+            return args;
+        }
+    }
+
     public static void main(String []args) throws IOException, InterruptedException {
 
+
+        MultRegionStartWithSameKeyIssue.CMDArgs config = MultRegionStartWithSameKeyIssue.CMDArgs.parseArgs(args);
+        System.out.println("Running with args \n"+config);
+
         Configuration conf = HBaseConfiguration.create();
-        conf.set("hbase.zookeeper.property.clientPort", "2181");
-        conf.set("hbase.zookeeper.quorum", "<ip>");
-        conf.set("zookeeper.znode.parent", "/hbase");
+        conf.set("hbase.zookeeper.property.clientPort", config.zkPort);
+        conf.set("hbase.zookeeper.quorum", config.zkQuorum);
+        conf.set("zookeeper.znode.parent", config.zkParentPath);
         Connection client = ConnectionFactory.createConnection(conf);
         System.out.println("------- Connection established ------> ");
         int maxRegionsPending;
-        int maxRetries = 3;
-        boolean dontMerge = true;
+        int maxRetries = config.maxRetries;
+        boolean dontMerge = !config.merge;
         do{
-            maxRegionsPending = scanAndMergeRegionWithSameKeys(client, TableName.valueOf("l0_calls_data"), dontMerge);
+            maxRegionsPending = scanAndMergeRegionWithSameKeys(client, TableName.valueOf(config.tableName), dontMerge);
             maxRetries--;
             System.out.println("maxRegionsPending "+maxRegionsPending);
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(config.retryAfterTimeInSecond);
         }while(maxRegionsPending != 0 && maxRetries > 0 && !dontMerge);
 
-
-//        Get get = new Get(Bytes.toBytes("481b9"));
-//
-//        Table table = client.getTable(TableName.valueOf("l0_apps_data"));
-//        Result result = table.get(get);
-//
-//        client.getAdmin().mergeRegions(Bytes.toBytes("bbfc46a5ccb8bf123161f1d83f4ba4f9"), Bytes.toBytes("f99e1146cee0e1b6e138b1125b067a74"), true);
-//        client.getAdmin().mergeRegions(Bytes.toBytes("bbfc46a5ccb8bf123161f1d83f4ba4f9"), Bytes.toBytes("f99e1146cee0e1b6e138b1125b067a74"), true);
-
-//        startKeyWiseRegions.get("bfbf").forEach(System.out::println);
     }
 
     private static int scanAndMergeRegionWithSameKeys(Connection client, TableName tableName, boolean dontMerge) throws IOException {
