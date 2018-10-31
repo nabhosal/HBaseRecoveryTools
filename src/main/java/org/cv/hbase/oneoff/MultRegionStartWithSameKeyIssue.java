@@ -11,6 +11,8 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.MetaScanner;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -22,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class MultRegionStartWithSameKeyIssue {
 
+    static final Logger LOG = LoggerFactory.getLogger(MultRegionStartWithSameKeyIssue.class);
 
     public static class CMDArgs {
 
@@ -75,21 +78,21 @@ public class MultRegionStartWithSameKeyIssue {
 
 
         MultRegionStartWithSameKeyIssue.CMDArgs config = MultRegionStartWithSameKeyIssue.CMDArgs.parseArgs(args);
-        System.out.println("Running with args \n"+config);
+        LOG.info("Running with args \n"+config);
 
         Configuration conf = HBaseConfiguration.create();
         conf.set("hbase.zookeeper.property.clientPort", config.zkPort);
         conf.set("hbase.zookeeper.quorum", config.zkQuorum);
         conf.set("zookeeper.znode.parent", config.zkParentPath);
         Connection client = ConnectionFactory.createConnection(conf);
-        System.out.println("------- Connection established ------> ");
+        LOG.info("------- Connection established ------> ");
         int maxRegionsPending;
         int maxRetries = config.maxRetries;
         boolean dontMerge = !config.merge;
         do{
             maxRegionsPending = scanAndMergeRegionWithSameKeys(client, TableName.valueOf(config.tableName), dontMerge);
             maxRetries--;
-            System.out.println("maxRegionsPending "+maxRegionsPending);
+            LOG.info("maxRegionsPending "+maxRegionsPending);
             TimeUnit.SECONDS.sleep(config.retryAfterTimeInSecond);
         }while(maxRegionsPending != 0 && maxRetries > 0 && !dontMerge);
 
@@ -98,7 +101,6 @@ public class MultRegionStartWithSameKeyIssue {
     private static int scanAndMergeRegionWithSameKeys(Connection client, TableName tableName, boolean dontMerge) throws IOException {
 
         NavigableMap<HRegionInfo, ServerName> regions = MetaScanner.allTableRegions(client, tableName);
-        System.out.println(TableName.META_TABLE_NAME.getNameAsString());
 
         Set<String> repeatingStartKey = new HashSet<>();
         Map<String, List<HRegionInfo>> startKeyWiseRegions = new LinkedHashMap<>();
@@ -114,11 +116,11 @@ public class MultRegionStartWithSameKeyIssue {
 
         });
 
-        System.out.println("Repeating startKey "+repeatingStartKey);
-        System.out.println("Total "+regions.size());
+        LOG.info("Repeating startKey "+repeatingStartKey);
+        LOG.info("Total "+regions.size());
         AtomicInteger ordinal = new AtomicInteger(0); // TODO : BAD HACK
         repeatingStartKey.forEach( startKey -> {
-            System.out.println("startKey: "+startKey +", no of regions: "+startKeyWiseRegions.get(startKey).size());
+            LOG.info("startKey: "+startKey +", no of regions: "+startKeyWiseRegions.get(startKey).size());
             startKeyWiseRegions.get(startKey).forEach(System.out::println);
             /* special case when only 2 region are pending */
             ordinal.set(Integer.max(ordinal.get(), startKeyWiseRegions.get(startKey).size()));
@@ -135,21 +137,19 @@ public class MultRegionStartWithSameKeyIssue {
 
     private static void mergeLastTwoRegions(List<HRegionInfo> hRegionInfos, Connection client){
 
-        System.out.println("mergeLastTwoRegions");
+        LOG.info("mergeLastTwoRegions");
         HRegionInfo firstRegion = hRegionInfos.get(0);
         HRegionInfo secondRegion = hRegionInfos.get(1);
 
-        System.out.println("Merging below 2 regions, 1st: "+firstRegion.getEncodedName()+", 2nd: "+secondRegion.getEncodedName());
-        System.out.println("First Region "+firstRegion);
-        System.out.println("Second Region "+secondRegion);
+        logsAction("Merging below 2 regions, 1st: "+firstRegion.getEncodedName()+", 2nd: "+secondRegion.getEncodedName(),
+                firstRegion, secondRegion);
+
         try {
             client.getAdmin().mergeRegions(firstRegion.getEncodedNameAsBytes(), secondRegion.getEncodedNameAsBytes(), true);
             TimeUnit.SECONDS.sleep(5);
 
         } catch (IOException e) {
-            System.out.println("Failed while merging ");
-            System.out.println("First Region "+firstRegion);
-            System.out.println("Second Region "+secondRegion);
+            logsAction("Failed while merging ", firstRegion, secondRegion);
             e.printStackTrace();
         }catch (InterruptedException e) {
             e.printStackTrace();
@@ -160,9 +160,10 @@ public class MultRegionStartWithSameKeyIssue {
 
         /* No Merge required */
         if(hRegionInfos.size() == 1){
+            LOG.debug("hRegionInfos.size() = 1 inside mergeRegionsWithSameKey");
             return ;
         }
-        System.out.println("Create sublist without first region");
+        LOG.info("Create sublist without first region");
         List<HRegionInfo> hRegionInfosSet = hRegionInfos.subList(1, hRegionInfos.size());
         Collections.reverse(hRegionInfosSet);
 
@@ -174,23 +175,26 @@ public class MultRegionStartWithSameKeyIssue {
             HRegionInfo firstRegion = hRegionInfosSet.get(index++);
             HRegionInfo secondRegion = hRegionInfosSet.get(index++);
 
-            System.out.println("Merging below 2 regions, 1st: "+firstRegion.getEncodedName()+", 2nd: "+secondRegion.getEncodedName());
-            System.out.println("First Region "+firstRegion);
-            System.out.println("Second Region "+secondRegion);
+            logsAction("Merging below 2 regions, 1st: "+firstRegion.getEncodedName()+", 2nd: "+secondRegion.getEncodedName(),
+                    firstRegion, secondRegion);
 
             try {
                 client.getAdmin().mergeRegions(firstRegion.getEncodedNameAsBytes(), secondRegion.getEncodedNameAsBytes(), true);
                 TimeUnit.SECONDS.sleep(5);
 
             } catch (IOException e) {
-                System.out.println("Failed while merging ");
-                System.out.println("First Region "+firstRegion);
-                System.out.println("Second Region "+secondRegion);
+                logsAction("Failed while merging ", firstRegion, secondRegion);
                 e.printStackTrace();
             }catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private static void logsAction(String msg, HRegionInfo firstRegion, HRegionInfo secondRegion){
+        LOG.info(msg);
+        LOG.info("First Region "+firstRegion);
+        LOG.info("Second Region "+secondRegion);
     }
 
 }
