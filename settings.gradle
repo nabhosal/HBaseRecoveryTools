@@ -1,2 +1,4 @@
 rootProject.name = 'org.cv.hbase.oneoff'
+include 'hbase-sequence-file-reader'
+include 'resolve-region-multisamekey-issue'
 

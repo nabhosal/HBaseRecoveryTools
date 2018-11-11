@@ -8,3 +8,6 @@
 *.class
 .classpath
 .project
+
+hbase-sequence-file-reader/build/
+resolve-region-multisamekey-issue/build/

@@ -1,3 +1,5 @@
+package org.cv.hbase.oneoff.test;
+
 import com.beust.jcommander.JCommander;
 import org.cv.hbase.oneoff.MultRegionStartWithSameKeyIssue;
 import org.junit.Test;
