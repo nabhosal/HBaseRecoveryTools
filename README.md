@@ -73,6 +73,7 @@ Java -jar org.cv.hbase.oneoff.MultRegionStartWithSameKeyIssue -tb <ableName> -ho
 ```
 
 ![Iterative Regio merge strategy](https://nabhosal.github.io/external-images/multi-region-strt-with-sameKey.png)
+
 Reference:
 https://stackoverflow.com/questions/24584174/manual-fix-of-hbase-table-overlap-multi-region-has-same-start-key
 https://blog.csdn.net/microGP/article/details/81233132
