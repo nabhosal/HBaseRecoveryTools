@@ -77,3 +77,6 @@ Java -jar org.cv.hbase.oneoff.MultRegionStartWithSameKeyIssue -tb <ableName> -ho
 Reference:
 - https://stackoverflow.com/questions/24584174/manual-fix-of-hbase-table-overlap-multi-region-has-same-start-key
 - https://blog.csdn.net/microGP/article/details/81233132
+
+
+[How to read Hbase sequence through Java](doc/read-hbase-sequence-file.md)
