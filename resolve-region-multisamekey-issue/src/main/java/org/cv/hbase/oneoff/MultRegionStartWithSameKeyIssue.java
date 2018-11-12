@@ -49,6 +49,9 @@ public class MultRegionStartWithSameKeyIssue {
         @Parameter(names = {"--retryAfterTimeInSecond", "-rfts"}, description = "Merge regions starts with same key")
         public int retryAfterTimeInSecond = 10;
 
+        @Parameter(names = {"--help", "-help"}, help = true)
+        private boolean help = false;
+
         @Override
         public String toString() {
             return "CMDArgs{" +
@@ -65,11 +68,16 @@ public class MultRegionStartWithSameKeyIssue {
         public static CMDArgs parseArgs(String ...argv){
 
             MultRegionStartWithSameKeyIssue.CMDArgs args = new MultRegionStartWithSameKeyIssue.CMDArgs();
-            JCommander.newBuilder()
+            JCommander jct = JCommander.newBuilder()
                     .addObject(args)
-                    .build()
-                    .parse(argv);
+                    .build();
 
+            jct.parse(argv);
+            if(args.help){
+
+                jct.setProgramName("MultRegionStartWithSameKeyIssue");
+                jct.usage();
+            }
             return args;
         }
     }
@@ -78,6 +86,11 @@ public class MultRegionStartWithSameKeyIssue {
 
 
         MultRegionStartWithSameKeyIssue.CMDArgs config = MultRegionStartWithSameKeyIssue.CMDArgs.parseArgs(args);
+
+        if(config.help){
+            return;
+        }
+
         LOG.info("Running with args \n"+config);
 
         Configuration conf = HBaseConfiguration.create();
