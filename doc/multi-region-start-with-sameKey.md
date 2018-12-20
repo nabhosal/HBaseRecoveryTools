@@ -5,7 +5,7 @@
 The hbase .meta region become offline, Instead of making it online we end up corrupting it. So we follow offline meta repair using `org.apache.hadoop.hbase.util.hbck.OfflineMetaRepair` mapreduce job. It did recreate .meta but now we started observing issue like region inconsistency, a region overlapping and multiple regions starting with the same key issues. Most of the issue can resolve using `hbase hbck -fixAssignments -fixMeta tableName` cmd. But an issue like multiple regions starting with the same key was not getting resolved. So we come up with a solution based on merging region. But doing it through `hbase shell` was difficult for us until you are comfortable with writing ruby code using shell ruby wrappers. Instead, We used java client to identify affected region and iteratively merged affected region.
 
 ```
-Java -jar org.cv.hbase.oneoff.MultRegionStartWithSameKeyIssue --help
+Java -jar resolve-region-multisamekey-issue-1.0-SNAPSHOT.jar --help
 
 Usage: MultRegionStartWithSameKeyIssue [options]
 
@@ -35,7 +35,7 @@ Usage: MultRegionStartWithSameKeyIssue [options]
 ```
 To identity affected regions
 ```
-Java -jar org.cv.hbase.oneoff.MultRegionStartWithSameKeyIssue -tb <ableName> -hosts <ip> 
+Java -jar resolve-region-multisamekey-issue-1.0-SNAPSHOT.jar -tb <ableName> -hosts <ip>
 hbase:meta
 Repeating startKey [481b9, bfbf]
 Total 30
@@ -64,7 +64,7 @@ startKey: bfbf, no of regions: 4
 ```
 To fix the issue, just pass -merge
 ```
-Java -jar org.cv.hbase.oneoff.MultRegionStartWithSameKeyIssue -tb <ableName> -hosts <ip> -merge
+Java -jar resolve-region-multisamekey-issue-1.0-SNAPSHOT.jar -tb <ableName> -hosts <ip> -merge
 ```
 
 ![Iterative Regio merge strategy](https://nabhosal.github.io/external-images/multi-region-strt-with-sameKey.png)

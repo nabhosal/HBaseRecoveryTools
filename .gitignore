@@ -11,3 +11,5 @@
 
 hbase-sequence-file-reader/build/
 resolve-region-multisamekey-issue/build/
+hbase-sequence-file-reader/out/
+resolve-region-multisamekey-issue/out/

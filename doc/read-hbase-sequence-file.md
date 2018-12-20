@@ -53,9 +53,9 @@ try {
    e.printStackTrace();
 }
 ```
-##### Code is avaliable at ReadHBaseSequenceFile.java file
+##### Code is avaliable at ReadHBaseSequenceFile.java file, below code not tested
 ```
-java -jar org.cv.hbase.oneoff.ReadHBaseSequenceFile
+java -jar hbase-sequence-file-reader-1.0-SNAPSHOT.jar
 1
 address.city hyderabad
 address.pincode 500081
