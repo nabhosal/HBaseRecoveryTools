@@ -84,6 +84,10 @@ public class MultRegionStartWithSameKeyIssue {
 
     public static void main(String []args) throws IOException, InterruptedException {
 
+        if(args.length == 0){
+            LOG.info("Zero arguments passed expecting arguments");
+            return;
+        }
 
         MultRegionStartWithSameKeyIssue.CMDArgs config = MultRegionStartWithSameKeyIssue.CMDArgs.parseArgs(args);
 

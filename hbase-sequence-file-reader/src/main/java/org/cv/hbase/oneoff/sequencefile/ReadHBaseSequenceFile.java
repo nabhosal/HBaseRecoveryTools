@@ -35,7 +35,8 @@ public class ReadHBaseSequenceFile {
 
         try {
             fs = FileSystem.get(conf);
-            Path inputPath = new Path("./hbase-sequence-file-reader/src/main/resources/sequencefiles/part-m-00000");
+//            Path inputPath = new Path("./hbase-sequence-file-reader/src/main/resources/sequencefiles/part-m-00000");
+            Path inputPath = new Path("/home/nilesh/cv_dump/part-m-00007");
             SequenceFile.Reader reader = new SequenceFile.Reader(fs, inputPath, conf);
 
             WritableComparable key = (WritableComparable) reader.getKeyClass().newInstance();

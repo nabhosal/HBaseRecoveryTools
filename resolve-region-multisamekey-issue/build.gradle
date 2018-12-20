@@ -17,3 +17,15 @@ dependencies {
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
+
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.cv.hbase.oneoff.MultRegionStartWithSameKeyIssue'
+    }
+    from {
+        (configurations.runtime).collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
