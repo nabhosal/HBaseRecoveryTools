@@ -22,6 +22,7 @@ dependencies {
 
 jar {
     manifest {
+        duplicatesStrategy = 'exclude'
         attributes 'Main-Class': 'org.cv.hbase.oneoff.sequencefile.ReadHBaseSequenceFile'
     }
     from {

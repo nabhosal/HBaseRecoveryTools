@@ -21,7 +21,7 @@ dependencies {
 
 jar {
     manifest {
-        duplicatesStrategy = 'include'
+        duplicatesStrategy = 'exclude'
         attributes 'Main-Class': 'org.cv.hbase.oneoff.MultRegionStartWithSameKeyIssue'
     }
     from {
